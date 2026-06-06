@@ -1,0 +1,33 @@
+# 生产环境配置（通过 SPRING_PROFILES_ACTIVE=prod 激活）
+
+spring:
+  mail:
+    enabled: ${SPRING_MAIL_ENABLED:false}
+
+mybatis-plus:
+  configuration:
+    # 生产环境关闭 SQL 标准输出
+    log-impl: org.apache.ibatis.logging.nologging.NoLoggingImpl
+
+logging:
+  level:
+    root: INFO
+    com.mulehang: INFO
+    org.springframework.web: WARN
+
+management:
+  endpoint:
+    health:
+      show-details: never
+  health:
+    elasticsearch:
+      enabled: ${ELASTICSEARCH_ENABLED:false}
+    mail:
+      enabled: false
+
+blog:
+  cors:
+    allowed-origin-patterns: ${BLOG_CORS_ALLOWED_ORIGINS:https://mulehang.top,http://mulehang.top}
+
+websocket:
+  allowed-origins: ${WEBSOCKET_ALLOWED_ORIGINS:https://mulehang.top}

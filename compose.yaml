@@ -1,0 +1,179 @@
+services:
+  blog-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: ${BLOG_APP_IMAGE:-ghcr.io/mulehang6/mulehang-blog:latest}
+    container_name: blog-app
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      SPRING_CONFIG_ADDITIONAL_LOCATION: optional:file:/app/config/
+      SPRING_DATASOURCE_URL: ${SPRING_DATASOURCE_URL:-jdbc:mysql://mysql:3306/mulehang_blog?useUnicode=true&characterEncoding=utf-8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true}
+      SPRING_DATASOURCE_USERNAME: ${SPRING_DATASOURCE_USERNAME:-blog}
+      SPRING_DATASOURCE_PASSWORD: ${MYSQL_PASSWORD}
+      SPRING_DATA_REDIS_HOST: ${SPRING_DATA_REDIS_HOST:-redis}
+      SPRING_DATA_REDIS_PASSWORD: ${REDIS_PASSWORD}
+      SPRING_RABBITMQ_HOST: ${SPRING_RABBITMQ_HOST:-rabbitmq}
+      SPRING_RABBITMQ_USERNAME: ${RABBITMQ_USER}
+      SPRING_RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD}
+      ELASTICSEARCH_ENABLED: ${ELASTICSEARCH_ENABLED:-true}
+      ELASTICSEARCH_URIS: ${ELASTICSEARCH_URIS:-http://elasticsearch:9200}
+      ELASTICSEARCH_USERNAME: ${ELASTICSEARCH_USERNAME}
+      ELASTICSEARCH_PASSWORD: ${ELASTICSEARCH_PASSWORD}
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_EXPIRATION: ${JWT_EXPIRATION:-86400}
+      JWT_ISSUER: ${JWT_ISSUER:-mulehang-blog}
+      WEBSOCKET_ALLOWED_ORIGINS: ${WEBSOCKET_ALLOWED_ORIGINS:-https://mulehang.top}
+      SPRING_MAIL_ENABLED: ${SPRING_MAIL_ENABLED:-false}
+      SPRING_MAIL_HOST: ${SPRING_MAIL_HOST:-smtp.163.com}
+      SPRING_MAIL_PORT: ${SPRING_MAIL_PORT:-465}
+      SPRING_MAIL_USERNAME: ${SPRING_MAIL_USERNAME}
+      SPRING_MAIL_PASSWORD: ${SPRING_MAIL_PASSWORD}
+      SPRING_MAIL_SSL_ENABLE: ${SPRING_MAIL_SSL_ENABLE:-true}
+      SPRING_MAIL_STARTTLS_ENABLE: ${SPRING_MAIL_STARTTLS_ENABLE:-false}
+      SPRING_MAIL_STARTTLS_REQUIRED: ${SPRING_MAIL_STARTTLS_REQUIRED:-false}
+      XFS_DEFAULT_PLATFORM: ${XFS_DEFAULT_PLATFORM:-aliyun-oss-1}
+      XFS_OSS_PLATFORM: ${XFS_OSS_PLATFORM:-aliyun-oss-1}
+      OSS_ACCESS_KEY_ID: ${OSS_ACCESS_KEY_ID}
+      OSS_ACCESS_KEY_SECRET: ${OSS_ACCESS_KEY_SECRET}
+      OSS_ENDPOINT: ${OSS_ENDPOINT:-oss-cn-hangzhou.aliyuncs.com}
+      OSS_BUCKET_NAME: ${OSS_BUCKET_NAME}
+      OSS_DOMAIN: ${OSS_DOMAIN}
+      OSS_BASE_PATH: ${OSS_BASE_PATH:-blog/}
+      STORAGE_BASE_PATH: ${STORAGE_BASE_PATH:-upload/}
+      STORAGE_MAX_SIZE_BYTES: ${STORAGE_MAX_SIZE_BYTES:-20971520}
+      STORAGE_ALLOWED_CONTENT_TYPE_PREFIX: ${STORAGE_ALLOWED_CONTENT_TYPE_PREFIX:-image/}
+      STORAGE_ENABLE_DATE_PATH: ${STORAGE_ENABLE_DATE_PATH:-true}
+      STORAGE_DATE_PATH_PATTERN: ${STORAGE_DATE_PATH_PATTERN:-yyyy/MM/dd}
+      GITHUB_OAUTH_CLIENT_ID: ${GITHUB_OAUTH_CLIENT_ID}
+      GITHUB_OAUTH_CLIENT_SECRET: ${GITHUB_OAUTH_CLIENT_SECRET}
+      GITHUB_OAUTH_REDIRECT_URI: ${GITHUB_OAUTH_REDIRECT_URI}
+      AI_DEFAULT_PROVIDER: ${AI_DEFAULT_PROVIDER:-openai}
+      AI_OPENAI_API_KEY: ${AI_OPENAI_API_KEY}
+      AI_OPENAI_BASE_URL: ${AI_OPENAI_BASE_URL:-https://api.openai.com}
+      AI_OPENAI_MODEL: ${AI_OPENAI_MODEL:-gpt-4o-mini}
+      AI_ANTHROPIC_API_KEY: ${AI_ANTHROPIC_API_KEY}
+      AI_ANTHROPIC_BASE_URL: ${AI_ANTHROPIC_BASE_URL:-https://api.anthropic.com}
+      AI_ANTHROPIC_MODEL: ${AI_ANTHROPIC_MODEL:-claude-haiku-4-5-20251001}
+    volumes:
+      - ./config:/app/config
+      - ./data/upload:/app/upload
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      elasticsearch:
+        condition: service_healthy
+
+  blog-frontend:
+    image: ${BLOG_FRONTEND_IMAGE:-ghcr.io/mulehang6/mulehang-blog-frontend:latest}
+    container_name: blog-frontend
+    restart: unless-stopped
+    expose:
+      - "80"
+    depends_on:
+      - blog-app
+  
+  caddy:
+    image: caddy:2.8-alpine
+    container_name: blog-caddy
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - /home/mulehang/cf/mulehang-blog.pem:/etc/caddy/certs/mulehang-blog.pem:ro
+      - /home/mulehang/cf/mulehang-blog.key:/etc/caddy/certs/mulehang-blog.key:ro
+      - caddy-data:/data
+      - caddy-config:/config
+    depends_on:
+      - blog-frontend
+
+  mysql:
+    image: mysql:8.0
+    container_name: blog-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-mulehang_blog}
+      MYSQL_USER: ${MYSQL_USER:-blog}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -u root -p$${MYSQL_ROOT_PASSWORD}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: blog-redis
+    restart: unless-stopped
+    command: redis-server --requirepass ${REDIS_PASSWORD} --appendonly yes
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD}", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    container_name: blog-rabbitmq
+    restart: unless-stopped
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:-blog}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD}
+    volumes:
+      - rabbitmq-data:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  elasticsearch:
+    image: elasticsearch:8.11.0
+    container_name: blog-elasticsearch
+    restart: unless-stopped
+    ports:
+      - "9201:9200"
+    environment:
+      discovery.type: single-node
+      xpack.security.enabled: "true"
+      xpack.security.enrollment.enabled: "false"
+      xpack.security.http.ssl.enabled: "false"
+      xpack.security.transport.ssl.enabled: "false"
+      ELASTIC_PASSWORD: ${ELASTIC_PASSWORD}
+      ES_JAVA_OPTS: "-Xms512m -Xmx512m"
+    volumes:
+      - es-data:/usr/share/elasticsearch/data
+    healthcheck:
+      test: ["CMD-SHELL", "curl -s -u elastic:$${ELASTIC_PASSWORD} http://localhost:9200/_cluster/health | grep -q 'green\\|yellow'"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+volumes:
+  mysql-data:
+  redis-data:
+  rabbitmq-data:
+  es-data:
+  caddy-data:
+  caddy-config:

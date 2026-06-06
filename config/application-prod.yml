@@ -1,0 +1,87 @@
+blog:
+  elasticsearch:
+    enabled: ${ELASTICSEARCH_ENABLED:true}
+
+spring:
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:mysql://mysql:3306/mulehang_blog?useUnicode=true&characterEncoding=utf-8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true}
+    username: ${SPRING_DATASOURCE_USERNAME:blog}
+    password: ${SPRING_DATASOURCE_PASSWORD:}
+
+  data:
+    redis:
+      host: ${SPRING_DATA_REDIS_HOST:redis}
+      password: ${SPRING_DATA_REDIS_PASSWORD:}
+
+  rabbitmq:
+    host: ${SPRING_RABBITMQ_HOST:rabbitmq}
+    username: ${SPRING_RABBITMQ_USERNAME:blog}
+    password: ${SPRING_RABBITMQ_PASSWORD:}
+
+  elasticsearch:
+    uris: ${ELASTICSEARCH_URIS:http://elasticsearch:9200}
+    username: ${ELASTICSEARCH_USERNAME:}
+    password: ${ELASTICSEARCH_PASSWORD:}
+
+  mail:
+    enabled: ${SPRING_MAIL_ENABLED:false}
+    host: ${SPRING_MAIL_HOST:smtp.163.com}
+    port: ${SPRING_MAIL_PORT:465}
+    username: ${SPRING_MAIL_USERNAME:}
+    password: ${SPRING_MAIL_PASSWORD:}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          ssl:
+            enable: ${SPRING_MAIL_SSL_ENABLE:true}
+          starttls:
+            enable: ${SPRING_MAIL_STARTTLS_ENABLE:false}
+            required: ${SPRING_MAIL_STARTTLS_REQUIRED:false}
+
+server:
+  port: ${SERVER_PORT:8080}
+
+jwt:
+  secret: ${JWT_SECRET}
+
+dromara:
+  x-file-storage:
+    default-platform: ${XFS_DEFAULT_PLATFORM:aliyun-oss-1}
+    aliyun-oss:
+      - platform: ${XFS_OSS_PLATFORM:aliyun-oss-1}
+        enable-storage: true
+        access-key: ${OSS_ACCESS_KEY_ID:}
+        secret-key: ${OSS_ACCESS_KEY_SECRET:}
+        end-point: ${OSS_ENDPOINT:oss-cn-hangzhou.aliyuncs.com}
+        bucket-name: ${OSS_BUCKET_NAME:}
+        domain: ${OSS_DOMAIN:}
+        base-path: ${OSS_BASE_PATH:blog/}
+
+storage:
+  base-path: ${STORAGE_BASE_PATH:upload/}
+  max-size-bytes: ${STORAGE_MAX_SIZE_BYTES:20971520}
+  allowed-content-type-prefix: ${STORAGE_ALLOWED_CONTENT_TYPE_PREFIX:image/}
+  enable-date-path: ${STORAGE_ENABLE_DATE_PATH:true}
+  date-path-pattern: ${STORAGE_DATE_PATH_PATTERN:yyyy/MM/dd}
+
+# 生产环境禁用 API 文档
+springdoc:
+  api-docs:
+    enabled: false
+  swagger-ui:
+    enabled: false
+
+knife4j:
+  enable: false
+
+# 生产环境 WebSocket 允许来源（仅允许线上域名）
+websocket:
+  allowed-origins: ${WEBSOCKET_ALLOWED_ORIGINS:https://mulehang.top}
+
+# 生产环境日志级别
+logging:
+  level:
+    root: INFO
+    com.mulehang: INFO
+    org.springframework.web: WARN

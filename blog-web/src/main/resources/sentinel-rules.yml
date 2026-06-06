@@ -1,0 +1,55 @@
+# Sentinel 流控/熔断规则（本地配置；生产可启用 sentinel.nacos.enabled 切换至 Nacos 动态加载）
+sentinel:
+  nacos:
+    enabled: false
+    server-addr: ${SENTINEL_NACOS_SERVER:127.0.0.1:8848}
+    namespace: ${SENTINEL_NACOS_NAMESPACE:}
+    group-id: SENTINEL_GROUP
+    flow-data-id: mulehang-blog-flow-rules
+    degrade-data-id: mulehang-blog-degrade-rules
+  rules:
+    flow:
+      - resource: ai-chat
+        count: 10
+      - resource: ai-chat-stream
+        count: 5
+      - resource: ai-assistant
+        count: 20
+      - resource: ai-writing
+        count: 10
+      - resource: ai-writing-stream
+        count: 5
+      - resource: auth-login
+        count: 5
+      - resource: auth-register
+        count: 3
+      - resource: comment-create
+        count: 10
+      - resource: file-upload
+        count: 5
+    degrade:
+      - resource: ai-chat
+        grade: 1
+        count: 0.5
+        timeWindow: 30
+        minRequestAmount: 10
+      - resource: ai-chat-stream
+        grade: 1
+        count: 0.5
+        timeWindow: 30
+        minRequestAmount: 5
+      - resource: ai-assistant
+        grade: 1
+        count: 0.6
+        timeWindow: 20
+        minRequestAmount: 10
+      - resource: ai-writing
+        grade: 1
+        count: 0.5
+        timeWindow: 30
+        minRequestAmount: 10
+      - resource: ai-writing-stream
+        grade: 1
+        count: 0.5
+        timeWindow: 30
+        minRequestAmount: 5

@@ -1,0 +1,293 @@
+# 博客自定义配置
+blog:
+  elasticsearch:
+    enabled: ${ELASTICSEARCH_ENABLED:true}
+  read-count:
+    # 阅读量 Redis 增量刷盘间隔（毫秒），默认 5 分钟
+    flush-interval-ms: ${BLOG_READ_COUNT_FLUSH_INTERVAL_MS:300000}
+  cors:
+    allowed-origin-patterns: ${BLOG_CORS_ALLOWED_ORIGINS:http://localhost:*,http://127.0.0.1:*,https://mulehang.top,http://mulehang.top}
+  
+  # AI 配置（Milestone 5）
+  ai:
+    # 默认使用的 Provider：openai, anthropic
+    default-provider: ${AI_DEFAULT_PROVIDER:openai}
+    providers:
+      # OpenAI（及兼容协议）
+      openai:
+        api-key: ${AI_OPENAI_API_KEY:sk-xxx}
+        # 可以配置为 OpenAI、DeepSeek 或其他兼容 OpenAI 协议的服务
+        base-url: ${AI_OPENAI_BASE_URL:https://api.openai.com}
+        model: ${AI_OPENAI_MODEL:gpt-5.2}
+        timeout: 60
+      # Anthropic Claude
+      anthropic:
+        api-key: ${AI_ANTHROPIC_API_KEY:sk-ant-xxx}
+        base-url: ${AI_ANTHROPIC_BASE_URL:https://api.anthropic.com}
+        model: ${AI_ANTHROPIC_MODEL:claude-haiku-4-5-20251001}
+        timeout: 60
+
+spring:
+
+  config:
+    import: optional:classpath:sentinel-rules.yml
+
+  # profile 不建议写在 application.yml 里：
+  # - 真实敏感配置放到 application-dev.yml（本地文件，不提交）
+  # - 启动时通过 --spring.profiles.active=dev 或 SPRING_PROFILES_ACTIVE=dev 指定
+
+  profiles:
+    # 默认启用 dev（当未显式指定 spring.profiles.active 时生效）。
+    # 线上/生产环境请通过环境变量或启动参数显式指定 prod。
+    default: dev
+
+  jmx:
+    enabled: true
+
+  application:
+    name: mulehang-blog
+
+  # 文件上传配置
+  servlet:
+    multipart:
+      enabled: true
+      max-file-size: 20MB
+      max-request-size: 50MB
+
+  # 数据源配置
+  datasource:
+    url: jdbc:mysql://localhost:3306/mulehang_blog?useUnicode=true&characterEncoding=utf-8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true&createDatabaseIfNotExist=true
+    username: root
+    password: ${SPRING_DATASOURCE_PASSWORD:}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    hikari:
+      minimum-idle: 5
+      maximum-pool-size: 20
+      idle-timeout: 600000
+      max-lifetime: 1800000
+      connection-timeout: 30000
+
+  # Redis 配置
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      password: ${SPRING_DATA_REDIS_PASSWORD:}
+      database: 0
+      lettuce:
+        pool:
+          max-active: 8
+          max-idle: 8
+          min-idle: 0
+          max-wait: -1ms
+
+  # RabbitMQ 配置
+  rabbitmq:
+    host: localhost
+    port: 5672
+    username: guest
+    password: ${SPRING_RABBITMQ_PASSWORD:guest}
+    virtual-host: /
+    listener:
+      simple:
+        acknowledge-mode: manual
+        prefetch: 1
+
+  # Elasticsearch 配置
+  # 说明：
+  # - 使用 Spring Boot 自动配置的 ES Java Client（elasticsearch-java）
+  # - 默认端口本地设置为 9201；如需调整，用环境变量 ELASTICSEARCH_URIS 覆盖
+  # - blog.elasticsearch.enabled=true 时才加载 ES 相关 Bean
+  elasticsearch:
+    uris: ${ELASTICSEARCH_URIS:http://localhost:9201}
+    username: ${ELASTICSEARCH_USERNAME:}
+    password: ${ELASTICSEARCH_PASSWORD:}
+
+  # 邮件配置（异步邮件通知）
+  # 说明：
+  # - 默认使用日志模拟（LogEmailServiceImpl），spring.mail.enabled=false
+  # - 若需真实发信，请设置 spring.mail.enabled=true 并配置以下参数
+  # - 默认切换为 163 邮箱，其他服务可通过环境变量覆盖
+  mail:
+    # 是否启用真实邮件发送（false=日志模拟，true=真实发送）
+    enabled: ${SPRING_MAIL_ENABLED:false}
+    # SMTP 服务器地址（163 邮箱: smtp.163.com）
+    host: ${SPRING_MAIL_HOST:smtp.163.com}
+    # SMTP 端口（163 SSL: 465）
+    port: ${SPRING_MAIL_PORT:465}
+    # 发件人邮箱
+    username: ${SPRING_MAIL_USERNAME:your-email@163.com}
+    # 邮箱授权码（不是邮箱密码！是在邮箱设置里生成的 SMTP 授权码）
+    password: ${SPRING_MAIL_PASSWORD:}
+    # 邮件编码
+    default-encoding: UTF-8
+    # SMTP 协议配置
+    properties:
+      mail:
+        smtp:
+          # 启用 SMTP 认证
+          auth: true
+          # 163 邮箱使用 SSL（可通过环境变量覆盖）
+          ssl:
+            enable: ${SPRING_MAIL_SSL_ENABLE:true}
+          # 163 不需要 STARTTLS（可通过环境变量覆盖）
+          starttls:
+            enable: ${SPRING_MAIL_STARTTLS_ENABLE:false}
+            required: ${SPRING_MAIL_STARTTLS_REQUIRED:false}
+          # 连接超时（毫秒）
+          connectiontimeout: 5000
+          timeout: 5000
+          writetimeout: 5000
+
+  # Liquibase 配置
+  liquibase:
+    enabled: true
+    change-log: classpath:/db/changelog/master.xml
+    drop-first: false
+
+# MyBatis-Plus 配置
+mybatis-plus:
+  configuration:
+    map-underscore-to-camel-case: true
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+  global-config:
+    db-config:
+      id-type: auto
+      logic-delete-field: deleted
+      logic-delete-value: 1
+      logic-not-delete-value: 0
+  mapper-locations: classpath*:/mapper/**/*.xml
+
+# Actuator 配置
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+      base-path: /actuator
+  endpoint:
+    health:
+      show-details: when-authorized
+      probes:
+        enabled: true
+      group:
+        readiness:
+          include: db,redis,diskSpace,ping
+        liveness:
+          include: ping
+  health:
+    elasticsearch:
+      enabled: ${ELASTICSEARCH_ENABLED:true}
+    mail:
+      enabled: ${SPRING_MAIL_ENABLED:false}
+  prometheus:
+    metrics:
+      export:
+        enabled: true
+
+# 日志配置
+logging:
+  level:
+    root: INFO
+    com.mulehang: DEBUG
+    org.springframework.web: DEBUG
+  pattern:
+    console: '%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n'
+
+# SpringDoc OpenAPI 配置
+springdoc:
+  api-docs:
+    enabled: true
+    path: /v3/api-docs
+  swagger-ui:
+    enabled: true
+    path: /swagger-ui.html
+    tags-sorter: alpha
+    operations-sorter: alpha
+
+# Knife4j 配置
+knife4j:
+  enable: true
+
+# WebSocket 配置（开发环境默认允许本地前端）
+websocket:
+  allowed-origins: ${WEBSOCKET_ALLOWED_ORIGINS:http://localhost:5173}
+
+# 服务器配置
+server:
+  port: 8080
+  servlet:
+    context-path: /
+    encoding:
+      charset: UTF-8
+      enabled: true
+      force: true
+
+# JWT 配置
+jwt:
+  secret: ${JWT_SECRET}
+  expiration: ${JWT_EXPIRATION:86400}  # 过期时间（秒），默认 24 小时
+  issuer: ${JWT_ISSUER:mulehang-blog}
+
+# GitHub OAuth 配置
+github:
+  oauth:
+    # GitHub OAuth App 配置（在 https://github.com/settings/developers 创建）
+    client-id: ${GITHUB_OAUTH_CLIENT_ID:your-github-client-id}
+    client-secret: ${GITHUB_OAUTH_CLIENT_SECRET:your-github-client-secret}
+    # 授权回调地址（必须与 GitHub OAuth App 中配置的一致）
+    # 注意：回调到前端页面，而不是后端 API
+    redirect-uri: ${GITHUB_OAUTH_REDIRECT_URI:http://localhost:5173/oauth/github/callback}
+    # GitHub OAuth 授权地址
+    authorize-url: https://github.com/login/oauth/authorize
+    # GitHub OAuth Token 获取地址
+    access-token-url: https://github.com/login/oauth/access_token
+    # GitHub 用户信息 API
+    user-info-url: https://api.github.com/user
+
+# 文件存储配置（XFileStorage）
+dromara:
+  x-file-storage:
+    # 默认存储平台
+    default-platform: ${XFS_DEFAULT_PLATFORM:aliyun-oss-1}
+
+    # 阿里云 OSS 配置（支持多个）
+    aliyun-oss:
+      - platform: ${XFS_OSS_PLATFORM:aliyun-oss-1}
+        enable-storage: true
+        access-key: ${OSS_ACCESS_KEY_ID:}
+        secret-key: ${OSS_ACCESS_KEY_SECRET:}
+        end-point: ${OSS_ENDPOINT:oss-cn-hangzhou.aliyuncs.com}
+        bucket-name: ${OSS_BUCKET_NAME:}
+        # 访问域名，注意以 “/” 结尾，例如：https://xxx.oss-cn-hangzhou.aliyuncs.com/
+        domain: ${OSS_DOMAIN:}
+        # 基础路径（可选）
+        base-path: ${OSS_BASE_PATH:blog/}
+
+# 存储业务配置（与 XFileStorage 的底层配置分离）
+storage:
+  base-path: upload/
+  max-size-bytes: 20971520
+  allowed-content-type-prefix: image/
+
+  # 是否按日期分目录存放（默认启用）：upload/yyyy/MM/dd/
+  enable-date-path: true
+  # 日期目录格式（默认 yyyy/MM/dd）
+  date-path-pattern: yyyy/MM/dd
+
+# Sentinel 流控和熔断配置
+csp:
+  sentinel:
+    # 应用名称（用于 Sentinel Dashboard 识别）
+    project:
+      name: ${spring.application.name:mulehang-blog}
+    # 应用类型
+    app:
+      type: 0
+    # Metric 日志配置
+    metric:
+      file:
+        single-size: 52428800  # 单个日志文件大小（50MB）
+        total-count: 6         # 日志文件总数
+      flush:
+        interval: 1            # 日志刷新间隔（秒）

@@ -1,0 +1,13 @@
+.git
+.idea
+.vscode
+**/target
+!blog-web/target/
+!blog-web/target/*.jar
+**/build
+blog-frontend/node_modules
+blog-frontend/dist
+**/logs
+**/*.log
+data
+config

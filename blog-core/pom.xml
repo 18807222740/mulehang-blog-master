@@ -1,0 +1,162 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>com.mulehang</groupId>
+        <artifactId>mulehang-blog-parent</artifactId>
+        <version>1.0.1</version>
+        <relativePath>../pom.xml</relativePath>
+    </parent>
+    <artifactId>blog-core</artifactId>
+    <name>blog-core</name>
+    <description>blog-core</description>
+    <url/>
+    <licenses>
+        <license/>
+    </licenses>
+    <developers>
+        <developer/>
+    </developers>
+    <scm>
+        <connection/>
+        <developerConnection/>
+        <tag/>
+        <url/>
+    </scm>
+    <dependencies>
+        <!-- 依赖 blog-api 获取枚举类 -->
+        <dependency>
+            <groupId>com.mulehang</groupId>
+            <artifactId>blog-api</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter</artifactId>
+        </dependency>
+
+        <!-- Spring Web（MultipartFile, HttpServletRequest） -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-web</artifactId>
+        </dependency>
+
+        <!-- WebFlux (for AI API calls) -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-webflux</artifactId>
+        </dependency>
+
+        <!-- Cache (Caffeine) + Redis + Redisson -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-cache</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.github.ben-manes.caffeine</groupId>
+            <artifactId>caffeine</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-redis</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.redisson</groupId>
+            <artifactId>redisson-spring-boot-starter</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.micrometer</groupId>
+            <artifactId>micrometer-core</artifactId>
+        </dependency>
+
+        <!-- Security utils (password hashing, etc.) -->
+        <dependency>
+            <groupId>org.springframework.security</groupId>
+            <artifactId>spring-security-crypto</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.auth0</groupId>
+            <artifactId>java-jwt</artifactId>
+        </dependency>
+
+        <!-- Mapping -->
+        <dependency>
+            <groupId>org.mapstruct</groupId>
+            <artifactId>mapstruct</artifactId>
+        </dependency>
+
+        <!-- Markdown Processing -->
+        <dependency>
+            <groupId>com.vladsch.flexmark</groupId>
+            <artifactId>flexmark-all</artifactId>
+        </dependency>
+
+        <!-- HTML sanitize (XSS protection) -->
+        <dependency>
+            <groupId>org.jsoup</groupId>
+            <artifactId>jsoup</artifactId>
+        </dependency>
+
+        <!-- Utilities -->
+        <dependency>
+            <groupId>com.google.guava</groupId>
+            <artifactId>guava</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>cn.hutool</groupId>
+            <artifactId>hutool-all</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-lang3</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-collections4</artifactId>
+        </dependency>
+
+        <!-- Content Security -->
+        <dependency>
+            <groupId>com.github.houbb</groupId>
+            <artifactId>sensitive-word</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.lionsoul</groupId>
+            <artifactId>ip2region</artifactId>
+        </dependency>
+
+        <!-- File Storage -->
+        <dependency>
+            <groupId>com.aliyun.oss</groupId>
+            <artifactId>aliyun-sdk-oss</artifactId>
+        </dependency>
+
+        <!-- X File Storage (Spring Boot Starter) -->
+        <dependency>
+            <groupId>org.dromara.x-file-storage</groupId>
+            <artifactId>x-file-storage-spring</artifactId>
+        </dependency>
+
+        <!-- Thread Context Propagation -->
+        <dependency>
+            <groupId>com.alibaba</groupId>
+            <artifactId>transmittable-thread-local</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <optional>true</optional>
+        </dependency>
+
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+
+</project>

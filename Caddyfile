@@ -1,0 +1,4 @@
+mulehang.top {
+  tls /etc/caddy/certs/mulehang-blog.pem /etc/caddy/certs/mulehang-blog.key
+  reverse_proxy blog-frontend:80
+}
